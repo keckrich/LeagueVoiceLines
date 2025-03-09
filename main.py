@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import random
 import os
-import pygame
+# import pygame
 from flask import Flask, jsonify, send_from_directory
 import html
 import re
@@ -11,6 +11,7 @@ def un_camel_sentence_case(input_string):
     decoded_string = html.unescape(input_string)
     result = re.sub(r'([a-z])([A-Z])', r'\1 \2', decoded_string)  # Add space between lowercase and uppercase
     result = result.replace("_", " ") # replace underscores with spaces
+    result = result.replace("%27", "'") # replace %27 with '
     return result
 
 def get_audio_link():
@@ -78,4 +79,4 @@ def random_line():
     return jsonify({"oggUrl": link, "name": name})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(app.run(host="0.0.0.0", port=5000))

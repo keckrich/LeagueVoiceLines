@@ -134,7 +134,7 @@
 
         showSkinButton.onclick = () => {
           const query = encodeURIComponent(data.name);
-          window.open(`https://www.google.com/search?tbm=isch&q=${query}`, '_blank');
+          window.open(`https://www.google.com/search?tbm=isch&q=${query + 'skin'}`, '_blank');
         };
       } catch (error) {
         console.error('Error fetching random line:', error);
