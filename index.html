@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Random Line Player</title>
+  <script src="/static/ogvjs-1.9.0/ogv.js"></script>
   <style>
     :root {
       --bg-color: #f4f4f4;
@@ -107,12 +108,14 @@
     <audio id="audioPlayer" controls style="display: none;">
       <source id="audioSource" src="" type="audio/ogg">
     </audio>
+    <button id="replayButton" style="display: none;">Replay</button>
+    <div id="fallbackPlayerContainer" style="display: none;"></div>
     <div id="textDisplay"></div>
     <br>
     <button id="showSkinButton" style="display: none;">Show Skin <span style="font-size: 14px;">&#x2197;</span></button>
   </div>
+
   <script>
-    // Check for preferred color scheme and apply dark mode if needed
     function applyTheme() {
       if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.body.classList.add('dark-mode');
@@ -121,40 +124,106 @@
       }
     }
 
-    // Apply theme initially
     applyTheme();
-
-    // Listen for changes in color scheme preference
     if (window.matchMedia) {
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
     }
 
+    let ogvPlayerInstance = null; // Track the OGVPlayer instance
+    let lastOggUrl = ''; // Store the last played OGG URL
+
+    async function playOggFallback(url) {
+      const audioPlayer = document.getElementById('audioPlayer');
+      const audioSource = document.getElementById('audioSource');
+      const fallbackContainer = document.getElementById('fallbackPlayerContainer');
+      const replayButton = document.getElementById('replayButton');
+
+      lastOggUrl = url; // Store the URL for replay
+
+      // Stop any existing audio before playing a new one
+      if (!audioPlayer.paused) {
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+      }
+      audioPlayer.style.display = 'none';
+
+      // Stop and remove previous OGVPlayer instance
+      if (ogvPlayerInstance) {
+        ogvPlayerInstance.pause();
+        ogvPlayerInstance.remove();
+        ogvPlayerInstance = null;
+      }
+      fallbackContainer.style.display = 'none';
+      fallbackContainer.innerHTML = '';
+      replayButton.style.display = 'none'; // Hide replay initially
+
+      if (document.createElement('audio').canPlayType('audio/ogg')) {
+        // Native OGG support
+        audioSource.src = url;
+        audioPlayer.load();
+        audioPlayer.style.display = 'block';
+        audioPlayer.play();
+      } else {
+        // No OGG support, use ogv.js
+        console.log("Using ogv.js fallback");
+        fallbackContainer.style.display = 'block';
+
+        ogvPlayerInstance = new OGVPlayer();
+        ogvPlayerInstance.src = url;
+        ogvPlayerInstance.style.width = '100%';
+        fallbackContainer.appendChild(ogvPlayerInstance);
+        ogvPlayerInstance.play();
+
+        // Show the replay button
+        replayButton.style.display = 'inline-block';
+      }
+    }
+
+    document.getElementById('replayButton').addEventListener('click', () => {
+      if (ogvPlayerInstance && lastOggUrl) {
+        ogvPlayerInstance.pause();
+        ogvPlayerInstance.currentTime = 0;
+        ogvPlayerInstance.play();
+      }
+    });
+
     document.getElementById('randomLineButton').addEventListener('click', async () => {
       const skeletonLoader = document.getElementById('skeletonLoader');
-      const audioPlayer = document.getElementById('audioPlayer');
       const revealButton = document.getElementById('revealButton');
       const textDisplay = document.getElementById('textDisplay');
       const showSkinButton = document.getElementById('showSkinButton');
+      const fallbackContainer = document.getElementById('fallbackPlayerContainer');
+      const audioPlayer = document.getElementById('audioPlayer');
+      const replayButton = document.getElementById('replayButton');
 
-      // Show skeleton loader
-      skeletonLoader.style.display = 'block';
+      // Stop any existing audio and hide UI before fetching a new line
+      if (!audioPlayer.paused) {
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+      }
       audioPlayer.style.display = 'none';
+
+      if (ogvPlayerInstance) {
+        ogvPlayerInstance.pause();
+        ogvPlayerInstance.remove();
+        ogvPlayerInstance = null;
+      }
+      fallbackContainer.style.display = 'none';
+      fallbackContainer.innerHTML = '';
+      replayButton.style.display = 'none';
+
+      skeletonLoader.style.display = 'block';
       revealButton.style.display = 'none';
       textDisplay.style.display = 'none';
       showSkinButton.style.display = 'none';
 
       try {
-        const response = await fetch('/random-line'); // Adjust this to your backend endpoint
+        const response = await fetch('/random-line');
         const data = await response.json();
 
-        const audioSource = document.getElementById('audioSource');
-
-        // Hide skeleton loader
         skeletonLoader.style.display = 'none';
 
-        audioSource.src = data.oggUrl;
-        audioPlayer.load(); // Reload the audio element to recognize new source
-        audioPlayer.style.display = 'block';
+        playOggFallback(data.oggUrl);
         revealButton.style.display = 'inline-block';
         showSkinButton.style.display = 'inline-block';
 
@@ -169,10 +238,11 @@
         };
       } catch (error) {
         console.error('Error fetching random line:', error);
-        skeletonLoader.style.display = 'none'; // Hide skeleton loader on error
+        skeletonLoader.style.display = 'none';
       }
     });
   </script>
+
 </body>
 
 </html>
