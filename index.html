@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Line Player</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      text-align: center;
+      background: white;
+      padding: 20px;
+      width: 400px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background 0.3s;
+      margin: 5px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    audio {
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    #textDisplay {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <button id="randomLineButton">Random Line</button>
+    <button id="revealButton" style="display: none;">Reveal</button>
+    <br><br>
+    <audio id="audioPlayer" controls style="display: none;">
+      <source id="audioSource" src="" type="audio/ogg">
+    </audio>
+    <div id="textDisplay"></div>
+  </div>
+
+  <script>
+    document.getElementById('randomLineButton').addEventListener('click', async () => {
+      try {
+        const response = await fetch('/random-line'); // Adjust this to your backend endpoint
+        const data = await response.json();
+
+        const audioSource = document.getElementById('audioSource');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const revealButton = document.getElementById('revealButton');
+        const textDisplay = document.getElementById('textDisplay');
+
+        audioSource.src = data.oggUrl;
+        audioPlayer.load(); // Reload the audio element to recognize new source
+        audioPlayer.style.display = 'block';
+        revealButton.style.display = 'inline-block';
+        textDisplay.style.display = 'none';
+
+        revealButton.onclick = () => {
+          textDisplay.textContent = data.name;
+          textDisplay.style.display = 'block';
+        };
+      } catch (error) {
+        console.error('Error fetching random line:', error);
+      }
+    });
+  </script>
+</body>
+
+</html>
