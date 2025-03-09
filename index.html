@@ -6,22 +6,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Random Line Player</title>
   <style>
+    :root {
+      --bg-color: #f4f4f4;
+      --container-bg: white;
+      --text-color: #333;
+      --shadow-color: rgba(0, 0, 0, 0.2);
+    }
+
+    /* Dark mode styles */
+    .dark-mode {
+      --bg-color: #212121;
+      --container-bg: #333333;
+      --text-color: #f0f0f0;
+      --shadow-color: rgba(0, 0, 0, 0.5);
+    }
+
     body {
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      background-color: #f4f4f4;
+      background-color: var(--bg-color);
       font-family: Arial, sans-serif;
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+      margin: 0;
     }
 
     .container {
       text-align: center;
-      background: white;
+      background: var(--container-bg);
       padding: 20px;
       width: 400px;
       border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 8px var(--shadow-color);
+      transition: background-color 0.3s, box-shadow 0.3s;
     }
 
     button {
@@ -63,9 +82,28 @@
       <source id="audioSource" src="" type="audio/ogg">
     </audio>
     <div id="textDisplay"></div>
+    <br>
+    <button id="showSkinButton" style="display: none;">Show Skin</button>
   </div>
 
   <script>
+    // Check for preferred color scheme and apply dark mode if needed
+    function applyTheme() {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    }
+
+    // Apply theme initially
+    applyTheme();
+
+    // Listen for changes in color scheme preference
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+    }
+
     document.getElementById('randomLineButton').addEventListener('click', async () => {
       try {
         const response = await fetch('/random-line'); // Adjust this to your backend endpoint
@@ -75,16 +113,28 @@
         const audioPlayer = document.getElementById('audioPlayer');
         const revealButton = document.getElementById('revealButton');
         const textDisplay = document.getElementById('textDisplay');
+        const showSkinButton = document.getElementById('showSkinButton');
+
+        // Make sure textDisplay is hidden when randomLineButton is clicked again
+        textDisplay.style.display = 'none';
+        textDisplay.textContent = '';
 
         audioSource.src = data.oggUrl;
         audioPlayer.load(); // Reload the audio element to recognize new source
         audioPlayer.style.display = 'block';
         revealButton.style.display = 'inline-block';
-        textDisplay.style.display = 'none';
+
+        // Show the showSkinButton immediately when randomLineButton is clicked
+        showSkinButton.style.display = 'inline-block';
 
         revealButton.onclick = () => {
           textDisplay.textContent = data.name;
           textDisplay.style.display = 'block';
+        };
+
+        showSkinButton.onclick = () => {
+          const query = encodeURIComponent(data.name);
+          window.open(`https://www.google.com/search?tbm=isch&q=${query}`, '_blank');
         };
       } catch (error) {
         console.error('Error fetching random line:', error);

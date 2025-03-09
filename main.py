@@ -75,7 +75,7 @@ def random_line():
     name = un_camel_sentence_case(link.split("/")[-1])[:-4]
     print(name)
     # return jsonify({"oggUrl": "https://static.wikia.nocookie.net/leagueoflegends/images/e/eb/Tristana_Original_BuyItemLastWhisper_0.ogg"})
-    return jsonify({"oggUrl": get_audio_link(), "name": name})
+    return jsonify({"oggUrl": link, "name": name})
 
 if __name__ == '__main__':
     app.run(debug=True)
